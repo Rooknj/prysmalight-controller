@@ -126,7 +126,7 @@ void setMqttIpWithMDNS()
       // Going through every available service,
       // we're searching for the one whose hostname
       // matches what we want, and then get its IP
-      if (MDNS.hostname(i) == CONFIG_MDNS_HOSTNAME)
+      if (MDNS.hostname(i) == CONFIG_MDNS_HOSTNAME || MDNS.hostname(i) == CONFIG_MDNS_HOSTNAME_LOCAL)
       {
         String MQTT_HOST = String(MDNS.IP(i)[0]) + String(".") +
                            String(MDNS.IP(i)[1]) + String(".") +
@@ -137,6 +137,7 @@ void setMqttIpWithMDNS()
         // Set MQTT_SERVER_IP to MQTT_HOST
         MQTT_HOST.toCharArray(MQTT_SERVER_IP, 16);
       }
+      Serial.println(MDNS.hostname(i));
     }
   }
 }

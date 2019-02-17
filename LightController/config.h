@@ -42,6 +42,7 @@
 
 // MDNS config
 #define CONFIG_MDNS_HOSTNAME "prysma"
+#define CONFIG_MDNS_HOSTNAME_LOCAL "prysma.local"
 
 // OTA config
 #define CONFIG_OTA_PASSWORD "ESP8266Rulez"
