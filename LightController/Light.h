@@ -8,6 +8,7 @@
 
 #include "Arduino.h"
 #include "config.h"
+#define FASTLED_ALLOW_INTERRUPTS 0
 #define FASTLED_INTERNAL
 #define FASTLED_ESP8266_DMA // better control for ESP8266 will output or RX pin requires fork https://github.com/coryking/FastLED
 #include "FastLED.h"        // LED strip control library

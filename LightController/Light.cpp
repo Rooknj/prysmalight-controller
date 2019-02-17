@@ -192,7 +192,7 @@ void Light::handleVisualize(int packetSize, WiFiUDP port)
 //************************************************************************
 // Light Effects
 //************************************************************************
-const int FRAMES_PER_SECOND = 60;                                   // The Frames Per Second of all animations
+const int FRAMES_PER_SECOND = 30;                                   // The Frames Per Second of all animations
 const int FLASH_SPEEDS[7] = {4000, 2000, 1000, 500, 350, 200, 100}; // In ms between color transitions
 const int FADE_SPEEDS[7] = {200, 100, 50, 33, 20, 10, 4};           // In ms between changing the hue by 1 (hue is a number 0-255)
 const int RAINBOW_SPEEDS[7] = {100, 50, 33, 17, 12, 10, 4};        // In ms between shifting the LED's and hue by 1
