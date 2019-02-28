@@ -18,7 +18,7 @@
 #define CONFIG_MAX_BRIGHTNESS 255 // TODO: Change this if you need
 
 // pin used for the rgb led strip (PWM)
-#define CONFIG_DATA_PIN 4 // This is pin D3 on the NodeMCU ESP8266
+#define CONFIG_DATA_PIN 5 // This is pin D5 on the NodeMCU ESP8266
 
 // Which LED strip are you using?
 #define CONFIG_CHIPSET WS2812B
