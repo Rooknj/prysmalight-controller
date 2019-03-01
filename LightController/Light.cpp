@@ -191,6 +191,10 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleNoise();
   }
+  else if (_effect == "Ripple")
+  {
+    handleRipple();
+  }
   // ADD_EFFECTS
 }
 
@@ -530,7 +534,7 @@ void Light::handleDots()
   }
 }
 
-// Fire
+// Fire (No Effect Speed Yet)
 void Light::handleFire()
 {
   random16_add_entropy(random8());
@@ -541,7 +545,7 @@ void Light::handleFire()
   }
 }
 
-// Lightning
+// Lightning (No Effect Speed Yet)
 uint8_t frequency = 50; // controls the interval between strikes
 uint8_t flashes = 8;    //the upper limit of flashes per strike
 unsigned int dimmer = 1;
@@ -586,10 +590,10 @@ void Light::handleLightning()
   }
 }
 
-// Noise
-static uint16_t dist;         // A random number for our noise generator.
-uint16_t scale = 30;          // Wouldn't recommend changing this on the fly, or the animation will be really blocky.
-uint8_t maxChanges = 48;      // Value for blending between palettes.
+// Noise (No Effect Speed Yet)
+static uint16_t dist;    // A random number for our noise generator.
+uint16_t scale = 30;     // Wouldn't recommend changing this on the fly, or the animation will be really blocky.
+uint8_t maxChanges = 48; // Value for blending between palettes.
 CRGBPalette16 targetPalette(OceanColors_p);
 CRGBPalette16 currentPalette(CRGB::Black);
 void Light::handleNoise()
@@ -598,12 +602,50 @@ void Light::handleNoise()
   {
     nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
-    {                                                                      // Just onE loop to fill up the LED array as all of the pixels change.
-      uint8_t index = inoise8(i * scale, dist + i * scale) % 255;          // Get a value from the noise function. I'm using both x and y axis.
+    {                                                                       // Just onE loop to fill up the LED array as all of the pixels change.
+      uint8_t index = inoise8(i * scale, dist + i * scale) % 255;           // Get a value from the noise function. I'm using both x and y axis.
       _leds[i] = ColorFromPalette(currentPalette, index, 255, LINEARBLEND); // With that value, look up the 8 bit colour palette value and assign it to the current LED.
     }
     dist += beatsin8(10, 1, 4); // Moving along the distance (that random number we started out with). Vary it a bit with a sine wave.
     // In some sketches, I've used millis() instead of an incremented counter. Works a treat.
+    FastLED.show();
+  }
+}
+
+// Ripple (No Effect Speed Yet) (Strange bug when changing brightness)
+uint8_t rippleColour;           // Ripple colour is randomized.
+int rippleCenter = 0;           // Center of the current ripple.
+int rippleStep = -1;      // -1 is the initializing step.
+uint8_t rippleFade = 255;     // Starting brightness.
+#define maxRippleSteps 16 // Case statement wouldn't allow a variable.
+uint8_t bgcol = 0;        // Background colour rotates.
+void Light::handleRipple()
+{
+  if (shouldShow())
+  {
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+      _leds[i] = CHSV(bgcol++, 255, 15); // Rotate background colour.
+    switch (rippleStep)
+    {
+    case -1: // Initialize ripple variables.
+      rippleCenter = random(CONFIG_NUM_LEDS);
+      rippleColour = random8();
+      rippleStep = 0;
+      break;
+    case 0:
+      _leds[rippleCenter] = CHSV(rippleColour, 255, 255); // Display the first pixel of the ripple.
+      rippleStep++;
+      break;
+    case maxRippleSteps: // At the end of the ripples.
+      rippleStep = -1;
+      break;
+    default:                                                                               // Middle of the ripples.
+      _leds[(rippleCenter + rippleStep + CONFIG_NUM_LEDS) % CONFIG_NUM_LEDS] += CHSV(rippleColour, 255, rippleFade / rippleStep * 2); // Simple wrap from Marc Miller
+      _leds[(rippleCenter - rippleStep + CONFIG_NUM_LEDS) % CONFIG_NUM_LEDS] += CHSV(rippleColour, 255, rippleFade / rippleStep * 2);
+      rippleStep++; // Next step.
+      break;
+    }
+
     FastLED.show();
   }
 }
