@@ -183,6 +183,10 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleFire();
   }
+  else if (_effect == "Lightning")
+  {
+    handleLightning();
+  }
   // ADD_EFFECTS
 }
 
@@ -502,6 +506,7 @@ void Light::handleSinelon()
   }
 }
 
+// Dots
 uint8_t count = 0; // Count up to 255 and then reverts to 0
 uint8_t DOTS_BPM = 30;
 const int DOTS_BPMS[7] = {8, 12, 14, 18, 22, 26, 30};
@@ -521,6 +526,7 @@ void Light::handleDots()
   }
 }
 
+// Fire
 void Light::handleFire()
 {
   random16_add_entropy(random8());
@@ -528,6 +534,51 @@ void Light::handleFire()
   {
     Fire2012WithPalette();
     FastLED.show();
+  }
+}
+
+// Lightning
+uint8_t frequency = 50; // controls the interval between strikes
+uint8_t flashes = 8;    //the upper limit of flashes per strike
+unsigned int dimmer = 1;
+uint8_t ledstart; // Starting location of a flash
+uint8_t ledlen;
+long lastStrike = 0;
+long nextStrike = 0;
+bool shouldStrike()
+{
+  long now = millis();
+
+  if (now - lastStrike > nextStrike)
+  {
+    lastStrike = now;
+    return true;
+  }
+  return false;
+}
+void Light::handleLightning()
+{
+  random16_add_entropy(random8());
+  if (shouldStrike())
+  {
+    ledstart = random8(CONFIG_NUM_LEDS);          // Determine starting location of flash
+    ledlen = random8(CONFIG_NUM_LEDS - ledstart); // Determine length of flash (not to go beyond NUM_LEDS-1)
+    for (int flashCounter = 0; flashCounter < random8(3, flashes); flashCounter++)
+    {
+      if (flashCounter == 0)
+        dimmer = 5; // the brightness of the leader is scaled down by a factor of 5
+      else
+        dimmer = random8(1, 3); // return strokes are brighter than the leader
+      fill_solid(_leds + ledstart, ledlen, CHSV(255, 0, 255 / dimmer));
+      FastLED.show();                                           // Show a section of LED's
+      delay(random8(4, 10));                                // each flash only lasts 4-10 milliseconds
+      fill_solid(_leds + ledstart, ledlen, CHSV(255, 0, 0)); // Clear the section of LED's
+      FastLED.show(); 
+      if (flashCounter == 0)
+        delay(130);             // longer delay until next flash after the leader
+      delay(50 + random8(100)); // shorter delay between strokes
+    }
+    nextStrike = random8(frequency) * 100; // delay between strikes
   }
 }
 
