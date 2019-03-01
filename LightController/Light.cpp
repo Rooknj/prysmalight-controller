@@ -10,6 +10,7 @@
 //************************************************************************
 // Constructor
 //************************************************************************
+CRGBPalette16 gPal; //for fire
 Light::Light()
 {
   // Set Serial Communication rate
@@ -25,6 +26,7 @@ Light::Light()
   _color = CRGB(255, 0, 0);
   _effect = NO_EFFECT;
   _effectSpeed = 4;
+  gPal = HeatColors_p; //for FIRE
 }
 
 //************************************************************************
@@ -177,6 +179,10 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleDots();
   }
+  else if (_effect == "Fire")
+  {
+    handleFire();
+  }
   // ADD_EFFECTS
 }
 
@@ -284,6 +290,54 @@ bool Light::shouldUpdate()
     return true;
   }
   return false;
+}
+
+// Fire code
+#define COOLING 55
+#define SPARKING 120
+bool gReverseDirection = false; // Change this to make fire run from the other end
+void Light::Fire2012WithPalette()
+{
+  // Array of temperature readings at each simulation cell
+  static byte heat[CONFIG_NUM_LEDS];
+
+  // Step 1.  Cool down every cell a little
+  for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+  {
+    heat[i] = qsub8(heat[i], random8(0, ((COOLING * 10) / CONFIG_NUM_LEDS) + 2));
+  }
+
+  // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+  for (int k = CONFIG_NUM_LEDS - 1; k >= 2; k--)
+  {
+    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+  }
+
+  // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+  if (random8() < SPARKING)
+  {
+    int y = random8(7);
+    heat[y] = qadd8(heat[y], random8(160, 255));
+  }
+
+  // Step 4.  Map from heat cells to LED colors
+  for (int j = 0; j < CONFIG_NUM_LEDS; j++)
+  {
+    // Scale the heat value from 0-255 down to 0-240
+    // for best results with color palettes.
+    byte colorindex = scale8(heat[j], 240);
+    CRGB color = ColorFromPalette(gPal, colorindex);
+    int pixelnumber;
+    if (gReverseDirection)
+    {
+      pixelnumber = (CONFIG_NUM_LEDS - 1) - j;
+    }
+    else
+    {
+      pixelnumber = j;
+    }
+    _leds[pixelnumber] = color;
+  }
 }
 
 // Flash
@@ -448,7 +502,7 @@ void Light::handleSinelon()
   }
 }
 
-uint8_t count = 0;     // Count up to 255 and then reverts to 0
+uint8_t count = 0; // Count up to 255 and then reverts to 0
 uint8_t DOTS_BPM = 30;
 const int DOTS_BPMS[7] = {8, 12, 14, 18, 22, 26, 30};
 const int DOTS_FADES[7] = {20, 25, 30, 35, 40, 45, 50};
@@ -463,6 +517,16 @@ void Light::handleDots()
     _leds[inner] = CRGB::Blue;
     _leds[outer] = CRGB::Aqua;
     fadeToBlackBy(_leds, CONFIG_NUM_LEDS, DOTS_FADES[_effectSpeed - 1]);
+    FastLED.show();
+  }
+}
+
+void Light::handleFire()
+{
+  random16_add_entropy(random8());
+  if (shouldShow())
+  {
+    Fire2012WithPalette();
     FastLED.show();
   }
 }
