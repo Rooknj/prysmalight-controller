@@ -191,10 +191,6 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleNoise();
   }
-  else if (_effect == "Ripple")
-  {
-    handleRipple();
-  }
   // ADD_EFFECTS
 }
 
@@ -523,12 +519,12 @@ void Light::handleDots()
 {
   if (shouldShow())
   {
-    uint8_t inner = beatsin8(DOTS_BPMS[_effectSpeed - 1], CONFIG_NUM_LEDS / 4, CONFIG_NUM_LEDS / 4 * 3);
-    uint8_t outer = beatsin8(DOTS_BPMS[_effectSpeed - 1], 0, CONFIG_NUM_LEDS - 1);
-    uint8_t middle = beatsin8(DOTS_BPMS[_effectSpeed - 1], CONFIG_NUM_LEDS / 3, CONFIG_NUM_LEDS / 3 * 2);
-    _leds[middle] = CRGB::Purple;
-    _leds[inner] = CRGB::Blue;
-    _leds[outer] = CRGB::Aqua;
+    uint8_t inner = beatsin8(DOTS_BPMS[_effectSpeed - 1], 0, CONFIG_NUM_LEDS / 4 * 3);
+    uint8_t outer = beatsin8(DOTS_BPMS[_effectSpeed - 1], 2, CONFIG_NUM_LEDS - 1);
+    uint8_t middle = beatsin8(DOTS_BPMS[_effectSpeed - 1], 1, CONFIG_NUM_LEDS / 4 * 2);
+    _leds[middle] = CRGB::Blue;
+    _leds[inner] = CRGB::Green;
+    _leds[outer] = CRGB::Red;
     fadeToBlackBy(_leds, CONFIG_NUM_LEDS, DOTS_FADES[_effectSpeed - 1]);
     FastLED.show();
   }
@@ -608,44 +604,6 @@ void Light::handleNoise()
     }
     dist += beatsin8(10, 1, 4); // Moving along the distance (that random number we started out with). Vary it a bit with a sine wave.
     // In some sketches, I've used millis() instead of an incremented counter. Works a treat.
-    FastLED.show();
-  }
-}
-
-// Ripple (No Effect Speed Yet) (Strange bug when changing brightness)
-uint8_t rippleColour;           // Ripple colour is randomized.
-int rippleCenter = 0;           // Center of the current ripple.
-int rippleStep = -1;      // -1 is the initializing step.
-uint8_t rippleFade = 255;     // Starting brightness.
-#define maxRippleSteps 16 // Case statement wouldn't allow a variable.
-uint8_t bgcol = 0;        // Background colour rotates.
-void Light::handleRipple()
-{
-  if (shouldShow())
-  {
-    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
-      _leds[i] = CHSV(bgcol++, 255, 15); // Rotate background colour.
-    switch (rippleStep)
-    {
-    case -1: // Initialize ripple variables.
-      rippleCenter = random(CONFIG_NUM_LEDS);
-      rippleColour = random8();
-      rippleStep = 0;
-      break;
-    case 0:
-      _leds[rippleCenter] = CHSV(rippleColour, 255, 255); // Display the first pixel of the ripple.
-      rippleStep++;
-      break;
-    case maxRippleSteps: // At the end of the ripples.
-      rippleStep = -1;
-      break;
-    default:                                                                               // Middle of the ripples.
-      _leds[(rippleCenter + rippleStep + CONFIG_NUM_LEDS) % CONFIG_NUM_LEDS] += CHSV(rippleColour, 255, rippleFade / rippleStep * 2); // Simple wrap from Marc Miller
-      _leds[(rippleCenter - rippleStep + CONFIG_NUM_LEDS) % CONFIG_NUM_LEDS] += CHSV(rippleColour, 255, rippleFade / rippleStep * 2);
-      rippleStep++; // Next step.
-      break;
-    }
-
     FastLED.show();
   }
 }
