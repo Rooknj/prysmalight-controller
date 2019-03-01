@@ -597,7 +597,6 @@ void Light::handleNoise()
   if (shouldShow())
   {
     nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
-    cycleHue();
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
     {                                                                      // Just onE loop to fill up the LED array as all of the pixels change.
       uint8_t index = inoise8(i * scale, dist + i * scale) % 255;          // Get a value from the noise function. I'm using both x and y axis.
