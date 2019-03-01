@@ -72,7 +72,8 @@ void Light::setEffect(String effect)
   _color = CRGB(255, 255, 255);
   _effect = effect;
   setRGB(0, 0, 0);
-  if(effect == "Flash") {
+  if (effect == "Flash")
+  {
     startFlash = true;
   }
 }
@@ -172,6 +173,11 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleVisualize(packetSize, port);
   }
+  else if (_effect == "Dots")
+  {
+    handleDots();
+  }
+  // ADD_EFFECTS
 }
 
 void Light::handleVisualize(int packetSize, WiFiUDP port)
@@ -195,10 +201,9 @@ void Light::handleVisualize(int packetSize, WiFiUDP port)
 const int FRAMES_PER_SECOND = 60;                                   // The Frames Per Second of all animations
 const int FLASH_SPEEDS[7] = {4000, 2000, 1000, 500, 350, 200, 100}; // In ms between color transitions
 const int FADE_SPEEDS[7] = {200, 100, 50, 33, 20, 10, 4};           // In ms between changing the hue by 1 (hue is a number 0-255)
-const int RAINBOW_SPEEDS[7] = {100, 50, 33, 17, 12, 10, 4};        // In ms between shifting the LED's and hue by 1
+const int RAINBOW_SPEEDS[7] = {100, 50, 33, 17, 12, 10, 4};         // In ms between shifting the LED's and hue by 1
 const int CONFETTI_SPEEDS[7] = {50, 33, 23, 17, 13, 10, 8};         // In ms between shifting the LED's and hue by 1
-const int CYLON_SPEEDS[7] = {10, 25, 50, 75, 100, 150, 200};           // In percent of the strip to travel in a second
-const int ORIGINAL_SPEEDS[7] = {100, 50, 33, 17, 8, 5, 3};
+const int CYLON_SPEEDS[7] = {10, 25, 50, 75, 100, 150, 200};        // In percent of the strip to travel in a second
 
 // Determines when to physically update the LED strip
 long lastShow = 0;
@@ -442,6 +447,27 @@ void Light::handleSinelon()
     FastLED.show();
   }
 }
+
+uint8_t count = 0;     // Count up to 255 and then reverts to 0
+uint8_t DOTS_BPM = 30;
+const int DOTS_BPMS[7] = {8, 12, 14, 18, 22, 26, 30};
+const int DOTS_FADES[7] = {20, 25, 30, 35, 40, 45, 50};
+void Light::handleDots()
+{
+  if (shouldShow())
+  {
+    uint8_t inner = beatsin8(DOTS_BPMS[_effectSpeed - 1], CONFIG_NUM_LEDS / 4, CONFIG_NUM_LEDS / 4 * 3);
+    uint8_t outer = beatsin8(DOTS_BPMS[_effectSpeed - 1], 0, CONFIG_NUM_LEDS - 1);
+    uint8_t middle = beatsin8(DOTS_BPMS[_effectSpeed - 1], CONFIG_NUM_LEDS / 3, CONFIG_NUM_LEDS / 3 * 2);
+    _leds[middle] = CRGB::Purple;
+    _leds[inner] = CRGB::Blue;
+    _leds[outer] = CRGB::Aqua;
+    fadeToBlackBy(_leds, CONFIG_NUM_LEDS, DOTS_FADES[_effectSpeed - 1]);
+    FastLED.show();
+  }
+}
+
+// ADD_EFFECTS
 
 //************************************************************************
 // Crossfade
