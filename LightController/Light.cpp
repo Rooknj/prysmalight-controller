@@ -187,6 +187,10 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleLightning();
   }
+  else if (_effect == "Noise")
+  {
+    handleNoise();
+  }
   // ADD_EFFECTS
 }
 
@@ -570,15 +574,38 @@ void Light::handleLightning()
       else
         dimmer = random8(1, 3); // return strokes are brighter than the leader
       fill_solid(_leds + ledstart, ledlen, CHSV(255, 0, 255 / dimmer));
-      FastLED.show();                                           // Show a section of LED's
-      delay(random8(4, 10));                                // each flash only lasts 4-10 milliseconds
+      FastLED.show();                                        // Show a section of LED's
+      delay(random8(4, 10));                                 // each flash only lasts 4-10 milliseconds
       fill_solid(_leds + ledstart, ledlen, CHSV(255, 0, 0)); // Clear the section of LED's
-      FastLED.show(); 
+      FastLED.show();
       if (flashCounter == 0)
         delay(130);             // longer delay until next flash after the leader
       delay(50 + random8(100)); // shorter delay between strokes
     }
     nextStrike = random8(frequency) * 100; // delay between strikes
+  }
+}
+
+// Noise
+static uint16_t dist;         // A random number for our noise generator.
+uint16_t scale = 30;          // Wouldn't recommend changing this on the fly, or the animation will be really blocky.
+uint8_t maxChanges = 48;      // Value for blending between palettes.
+CRGBPalette16 targetPalette(OceanColors_p);
+CRGBPalette16 currentPalette(CRGB::Black);
+void Light::handleNoise()
+{
+  if (shouldShow())
+  {
+    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
+    cycleHue();
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    {                                                                      // Just onE loop to fill up the LED array as all of the pixels change.
+      uint8_t index = inoise8(i * scale, dist + i * scale) % 255;          // Get a value from the noise function. I'm using both x and y axis.
+      _leds[i] = ColorFromPalette(currentPalette, index, 255, LINEARBLEND); // With that value, look up the 8 bit colour palette value and assign it to the current LED.
+    }
+    dist += beatsin8(10, 1, 4); // Moving along the distance (that random number we started out with). Vary it a bit with a sine wave.
+    // In some sketches, I've used millis() instead of an incremented counter. Works a treat.
+    FastLED.show();
   }
 }
 
