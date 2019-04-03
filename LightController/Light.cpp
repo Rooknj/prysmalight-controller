@@ -10,6 +10,7 @@
 //************************************************************************
 // Constructor
 //************************************************************************
+CRGBPalette16 gPal; //for fire
 Light::Light()
 {
   // Set Serial Communication rate
@@ -25,6 +26,7 @@ Light::Light()
   _color = CRGB(255, 0, 0);
   _effect = NO_EFFECT;
   _effectSpeed = 4;
+  gPal = HeatColors_p; //for FIRE
 }
 
 //************************************************************************
@@ -72,7 +74,8 @@ void Light::setEffect(String effect)
   _color = CRGB(255, 255, 255);
   _effect = effect;
   setRGB(0, 0, 0);
-  if(effect == "Flash") {
+  if (effect == "Flash")
+  {
     startFlash = true;
   }
 }
@@ -172,6 +175,23 @@ void Light::loop(int packetSize, WiFiUDP port)
   {
     handleVisualize(packetSize, port);
   }
+  else if (_effect == "Dots")
+  {
+    handleDots();
+  }
+  else if (_effect == "Fire")
+  {
+    handleFire();
+  }
+  else if (_effect == "Lightning")
+  {
+    handleLightning();
+  }
+  else if (_effect == "Noise")
+  {
+    handleNoise();
+  }
+  // ADD_EFFECTS
 }
 
 void Light::handleVisualize(int packetSize, WiFiUDP port)
@@ -195,10 +215,9 @@ void Light::handleVisualize(int packetSize, WiFiUDP port)
 const int FRAMES_PER_SECOND = 60;                                   // The Frames Per Second of all animations
 const int FLASH_SPEEDS[7] = {4000, 2000, 1000, 500, 350, 200, 100}; // In ms between color transitions
 const int FADE_SPEEDS[7] = {200, 100, 50, 33, 20, 10, 4};           // In ms between changing the hue by 1 (hue is a number 0-255)
-const int RAINBOW_SPEEDS[7] = {100, 50, 33, 17, 12, 10, 4};        // In ms between shifting the LED's and hue by 1
+const int RAINBOW_SPEEDS[7] = {100, 50, 33, 17, 12, 10, 4};         // In ms between shifting the LED's and hue by 1
 const int CONFETTI_SPEEDS[7] = {50, 33, 23, 17, 13, 10, 8};         // In ms between shifting the LED's and hue by 1
-const int CYLON_SPEEDS[7] = {10, 25, 50, 75, 100, 150, 200};           // In percent of the strip to travel in a second
-const int ORIGINAL_SPEEDS[7] = {100, 50, 33, 17, 8, 5, 3};
+const int CYLON_SPEEDS[7] = {10, 25, 50, 75, 100, 150, 200};        // In percent of the strip to travel in a second
 
 // Determines when to physically update the LED strip
 long lastShow = 0;
@@ -279,6 +298,54 @@ bool Light::shouldUpdate()
     return true;
   }
   return false;
+}
+
+// Fire code
+#define COOLING 55
+#define SPARKING 120
+bool gReverseDirection = false; // Change this to make fire run from the other end
+void Light::Fire2012WithPalette()
+{
+  // Array of temperature readings at each simulation cell
+  static byte heat[CONFIG_NUM_LEDS];
+
+  // Step 1.  Cool down every cell a little
+  for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+  {
+    heat[i] = qsub8(heat[i], random8(0, ((COOLING * 10) / CONFIG_NUM_LEDS) + 2));
+  }
+
+  // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+  for (int k = CONFIG_NUM_LEDS - 1; k >= 2; k--)
+  {
+    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+  }
+
+  // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+  if (random8() < SPARKING)
+  {
+    int y = random8(7);
+    heat[y] = qadd8(heat[y], random8(160, 255));
+  }
+
+  // Step 4.  Map from heat cells to LED colors
+  for (int j = 0; j < CONFIG_NUM_LEDS; j++)
+  {
+    // Scale the heat value from 0-255 down to 0-240
+    // for best results with color palettes.
+    byte colorindex = scale8(heat[j], 240);
+    CRGB color = ColorFromPalette(gPal, colorindex);
+    int pixelnumber;
+    if (gReverseDirection)
+    {
+      pixelnumber = (CONFIG_NUM_LEDS - 1) - j;
+    }
+    else
+    {
+      pixelnumber = j;
+    }
+    _leds[pixelnumber] = color;
+  }
 }
 
 // Flash
@@ -442,6 +509,106 @@ void Light::handleSinelon()
     FastLED.show();
   }
 }
+
+// Dots
+uint8_t count = 0; // Count up to 255 and then reverts to 0
+uint8_t DOTS_BPM = 30;
+const int DOTS_BPMS[7] = {8, 12, 14, 18, 22, 26, 30};
+const int DOTS_FADES[7] = {20, 25, 30, 35, 40, 45, 50};
+void Light::handleDots()
+{
+  if (shouldShow())
+  {
+    uint8_t inner = beatsin8(DOTS_BPMS[_effectSpeed - 1], 0, CONFIG_NUM_LEDS / 4 * 3);
+    uint8_t outer = beatsin8(DOTS_BPMS[_effectSpeed - 1], 2, CONFIG_NUM_LEDS - 1);
+    uint8_t middle = beatsin8(DOTS_BPMS[_effectSpeed - 1], 1, CONFIG_NUM_LEDS / 4 * 2);
+    _leds[middle] = CRGB::Blue;
+    _leds[inner] = CRGB::Green;
+    _leds[outer] = CRGB::Red;
+    fadeToBlackBy(_leds, CONFIG_NUM_LEDS, DOTS_FADES[_effectSpeed - 1]);
+    FastLED.show();
+  }
+}
+
+// Fire (No Effect Speed Yet)
+void Light::handleFire()
+{
+  random16_add_entropy(random8());
+  if (shouldShow())
+  {
+    Fire2012WithPalette();
+    FastLED.show();
+  }
+}
+
+// Lightning (No Effect Speed Yet)
+uint8_t frequency = 50; // controls the interval between strikes
+uint8_t flashes = 8;    //the upper limit of flashes per strike
+unsigned int dimmer = 1;
+uint8_t ledstart; // Starting location of a flash
+uint8_t ledlen;
+long lastStrike = 0;
+long nextStrike = 0;
+bool shouldStrike()
+{
+  long now = millis();
+
+  if (now - lastStrike > nextStrike)
+  {
+    lastStrike = now;
+    return true;
+  }
+  return false;
+}
+void Light::handleLightning()
+{
+  random16_add_entropy(random8());
+  if (shouldStrike())
+  {
+    ledstart = random8(CONFIG_NUM_LEDS);          // Determine starting location of flash
+    ledlen = random8(CONFIG_NUM_LEDS - ledstart); // Determine length of flash (not to go beyond NUM_LEDS-1)
+    for (int flashCounter = 0; flashCounter < random8(3, flashes); flashCounter++)
+    {
+      if (flashCounter == 0)
+        dimmer = 5; // the brightness of the leader is scaled down by a factor of 5
+      else
+        dimmer = random8(1, 3); // return strokes are brighter than the leader
+      fill_solid(_leds + ledstart, ledlen, CHSV(255, 0, 255 / dimmer));
+      FastLED.show();                                        // Show a section of LED's
+      delay(random8(4, 10));                                 // each flash only lasts 4-10 milliseconds
+      fill_solid(_leds + ledstart, ledlen, CHSV(255, 0, 0)); // Clear the section of LED's
+      FastLED.show();
+      if (flashCounter == 0)
+        delay(130);             // longer delay until next flash after the leader
+      delay(50 + random8(100)); // shorter delay between strokes
+    }
+    nextStrike = random8(frequency) * 100; // delay between strikes
+  }
+}
+
+// Noise (No Effect Speed Yet)
+static uint16_t dist;    // A random number for our noise generator.
+uint16_t scale = 30;     // Wouldn't recommend changing this on the fly, or the animation will be really blocky.
+uint8_t maxChanges = 48; // Value for blending between palettes.
+CRGBPalette16 targetPalette(OceanColors_p);
+CRGBPalette16 currentPalette(CRGB::Black);
+void Light::handleNoise()
+{
+  if (shouldShow())
+  {
+    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    {                                                                       // Just onE loop to fill up the LED array as all of the pixels change.
+      uint8_t index = inoise8(i * scale, dist + i * scale) % 255;           // Get a value from the noise function. I'm using both x and y axis.
+      _leds[i] = ColorFromPalette(currentPalette, index, 255, LINEARBLEND); // With that value, look up the 8 bit colour palette value and assign it to the current LED.
+    }
+    dist += beatsin8(10, 1, 4); // Moving along the distance (that random number we started out with). Vary it a bit with a sine wave.
+    // In some sketches, I've used millis() instead of an incremented counter. Works a treat.
+    FastLED.show();
+  }
+}
+
+// ADD_EFFECTS
 
 //************************************************************************
 // Crossfade

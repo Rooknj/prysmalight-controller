@@ -163,7 +163,7 @@ const char *LIGHT_DISCONNECTED = "0";
 // send/receive buffer
 // Make this bigger if you need to add more objects to the json
 // Also make sure MQTT_MAX_PACKET_SIZE in PubSubClient.h is big enough
-const int BUFFER_SIZE = JSON_OBJECT_SIZE(20);
+const int BUFFER_SIZE = JSON_OBJECT_SIZE(30);
 
 // MQTT Setup
 void createMqttTopic(char *bufferVariable, char *topLevel, char *lightName, char *topic)

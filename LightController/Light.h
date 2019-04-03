@@ -45,8 +45,8 @@ private:
   CRGB _color;
   String _effect;
   int _effectSpeed;
-  int _numEffects = 9;
-  char *_effects[9] = {"Flash", "Fade", "Rainbow", "Cylon", "Sinelon", "Confetti", "BPM", "Juggle", "Visualize"}; // Change to add effect
+  int _numEffects = 13; // ADD_EFFECTS
+  char *_effects[13] = {"Flash", "Fade", "Rainbow", "Cylon", "Sinelon", "Confetti", "BPM", "Juggle", "Visualize", "Dots", "Fire", "Lightning", "Noise"}; // ADD_EFFECTS
   CRGB _leds[CONFIG_NUM_LEDS];
 
   // Private functions
@@ -60,8 +60,10 @@ private:
   bool shouldUpdate();
   void fadeall();
   int getBPM();
+  void Fire2012WithPalette();
 
   // Animation functions
+  // ADD_EFFECTS
   void handleFlash();
   void handleFade();
   void handleRainbow();
@@ -71,6 +73,10 @@ private:
   void handleBPM();
   void handleSinelon();
   void handleVisualize(int packetSize, WiFiUDP port);
+  void handleDots();
+  void handleFire();
+  void handleLightning();
+  void handleNoise();
 
   // Color/Brightness transition functions
   void changeColorTo(uint8_t red, uint8_t green, uint8_t blue);
