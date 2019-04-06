@@ -446,9 +446,14 @@ void sendConfig()
     JsonObject &root = jsonBuffer.createObject();
 
     // populate payload with name
+    root["id"] = CONFIG_NAME;
     root["name"] = CONFIG_NAME;
 
     // populate payload with config properties
+    root["version"] = VERSION;
+    root["hardware"] = HARDWARE;
+    root["colorOrder"] = COLOR_ORDER;
+    root["stripType"] = STRIP_TYPE;
     root["ipAddress"] = WiFi.localIP().toString();
     root["macAddress"] = WiFi.macAddress();
     root["numLeds"] = CONFIG_NUM_LEDS;
