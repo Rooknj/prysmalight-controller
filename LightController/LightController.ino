@@ -30,7 +30,7 @@ WiFiClient wifiClient;
 WiFiUDP port;
 const int _UDP_PORT = 7778;
 byte mac[6];
-char CONFIG_NAME[18];
+char CONFIG_NAME[32];
 
 // WIFI Setup
 void setupWifi()
@@ -589,7 +589,7 @@ void sendHomekitState(char *characteristic)
 void setup()
 {
   WiFi.macAddress(mac);
-  snprintf(CONFIG_NAME, sizeof(CONFIG_NAME), "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(CONFIG_NAME, sizeof(CONFIG_NAME), "Prysma-%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   
   // init the light
   light.setBrightness(100);
