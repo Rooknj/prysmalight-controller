@@ -29,6 +29,8 @@ Light light;
 WiFiClient wifiClient;
 WiFiUDP port;
 const int _UDP_PORT = 7778;
+byte mac[6];
+char CONFIG_NAME[18];
 
 // WIFI Setup
 void setupWifi()
@@ -586,7 +588,9 @@ void sendHomekitState(char *characteristic)
 // Setup
 void setup()
 {
-
+  WiFi.macAddress(mac);
+  snprintf(CONFIG_NAME, sizeof(CONFIG_NAME), "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  
   // init the light
   light.setBrightness(100);
   light.setState(false);

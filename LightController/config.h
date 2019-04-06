@@ -3,16 +3,16 @@
 #define CONFIG_DEBUG true
 
 // The unique name of the light (must be less than 16 characters)
-#define CONFIG_NAME "Shelf" // TODO: Change This (Must be unique)
+// #define CONFIG_NAME "Test" // TODO: Change This (Must be unique)
 
 // Wifi manager access point config
 #define CONFIG_WIFI_MANAGER_PW "991f76a6ab"
-#define STATIC_IP "10.0.0.202" // TODO: Change this (must be unique)
-#define STATIC_GW "10.0.0.1"
-#define STATIC_SN "255.255.252.0"
+//#define STATIC_IP "10.0.0.205" // TODO: Change this (must be unique)
+//#define STATIC_GW "10.0.0.1"
+//#define STATIC_SN "255.255.252.0"
 
 // how many leds in your strip?
-#define CONFIG_NUM_LEDS 120 // TODO: Change this to match your LED strip
+#define CONFIG_NUM_LEDS 60 // TODO: Change this to match your LED strip
 
 // the maximum value you can set brightness to out of 255
 #define CONFIG_MAX_BRIGHTNESS 255 // TODO: Change this if you need
