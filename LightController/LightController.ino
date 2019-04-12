@@ -151,6 +151,7 @@ char MQTT_LIGHT_STATE_TOPIC[50];     // for sending the state
 char MQTT_LIGHT_COMMAND_TOPIC[50];   // for receiving commands
 char MQTT_LIGHT_CONFIG_TOPIC[50];    // for sending config info
 char MQTT_LIGHT_DISCOVERY_TOPIC[50]; // to know when to send config info
+char MQTT_LIGHT_DISCOVERY_RESPONSE_TOPIC[50]; // to know when to send config info
 
 // homebridge
 char *HOMEKIT_LIGHT_STATE_TOPIC = "prysmalight/to/set";
@@ -189,6 +190,7 @@ void setupMqtt()
   createMqttTopic(MQTT_LIGHT_COMMAND_TOPIC, CONFIG_MQTT_TOP, CONFIG_NAME, CONFIG_MQTT_COMMAND);
   createMqttTopic(MQTT_LIGHT_CONFIG_TOPIC, CONFIG_MQTT_TOP, CONFIG_NAME, CONFIG_MQTT_CONFIG);
   createMqttTopic(MQTT_LIGHT_DISCOVERY_TOPIC, CONFIG_MQTT_TOP, NULL, CONFIG_MQTT_DISCOVERY);
+  createMqttTopic(MQTT_LIGHT_DISCOVERY_RESPONSE_TOPIC, CONFIG_MQTT_TOP, CONFIG_NAME, CONFIG_MQTT_DISCOVERY_RESPONSE);
 
   // init the MQTT connection
   client.setServer(MQTT_SERVER_IP, MQTT_SERVER_PORT);
@@ -233,6 +235,7 @@ boolean reconnect()
     // publish the initial values
     sendState();
     sendEffectList();
+    sendConfig(false);
 
     // ... and resubscribe
     client.subscribe(MQTT_LIGHT_COMMAND_TOPIC);
@@ -273,7 +276,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
   else if (strcmp(topic, MQTT_LIGHT_DISCOVERY_TOPIC) == 0)
   {
-    sendConfig();
+    sendConfig(true);
     return;
   }
   else
@@ -434,7 +437,7 @@ void sendEffectList()
 
 // send config over MQTT (Debounce of 1 second)
 long lastConfigUpdate = 0;
-void sendConfig()
+void sendConfig(bool discovery)
 {
   long now = millis();
   if (now - lastConfigUpdate > 1000)
@@ -462,7 +465,11 @@ void sendConfig()
     char buffer[root.measureLength() + 1];
     root.printTo(buffer, sizeof(buffer));
 
-    client.publish(MQTT_LIGHT_CONFIG_TOPIC, buffer);
+    if(discovery) {
+      client.publish(MQTT_LIGHT_DISCOVERY_RESPONSE_TOPIC, buffer);
+    } else {
+      client.publish(MQTT_LIGHT_CONFIG_TOPIC, buffer, true);
+    }
   }
 }
 
