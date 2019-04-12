@@ -2,7 +2,7 @@
 #define VERSION "1.0.0"
 #define HARDWARE "8266"
 #define COLOR_ORDER "GRB"
-#define STRIP_TYPE "WS2812b"
+#define STRIP_TYPE "WS2812B"
 
 // how many leds in your strip?
 #define CONFIG_NUM_LEDS 60 // TODO: Change this to match your LED strip
