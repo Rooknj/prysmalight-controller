@@ -9,10 +9,155 @@ prysmalight-esp8266
   An arduino sketch to control addressable RGB led strips
 </p>
 
-<!-- <p align="center">
-  <a href="https://www.npmjs.com/package/lerna"><img alt="NPM Status" src="https://img.shields.io/npm/v/lerna.svg?style=flat"></a>
-  <a href="https://travis-ci.org/lerna/lerna"><img alt="Travis Status" src="https://img.shields.io/travis/lerna/lerna/master.svg?style=flat&label=travis"></a>
-</p> -->
+# MQTT API
+## Connection Topic: ```prysma/<id>/connected```
+  - Fields:
+    - name ```<String>```: id of the light
+    - connection ```<[0, 2]>```: 0=disconnected, 2=connected
+  - Example Response:
+  ```
+  {
+    "name": "Prysma-84F3EBB45500",
+    "connection": "2"
+  }
+  ```
+## Effect List Topic: ```prysma/<id>/effects```
+  - Fields:
+    - name ```<String>```: id of the light
+    - effectList ```<Array>```: list of supported effects
+  - Example Response:
+  ```
+  {
+    "name": "Prysma-84F3EBB45500",
+    "effectList": [
+      "Flash",
+      "Fade",
+      "Rainbow",
+      "Cylon",
+      "Sinelon",
+      "Confetti",
+      "BPM",
+      "Juggle",
+      "Visualize",
+      "Dots",
+      "Fire",
+      "Lightning",
+      "Noise"
+    ]
+  }
+  ```
+## State Topic: ```prysma/<id>/state```
+  - Fields:
+    - mutationId ```<Number> (optional)```: Unique id of command that triggered change in state
+    - name ```<String>```: id of the light
+    - state ```<["ON", "OFF"]>```: light is on or off
+    - color ```<Object {r, g, b}>```: RGB color of light from 0-255
+    - brightness ```<Number 0-100>```: Brightness of light
+    - effect ```<String>```: Name of the current effect or "None" for no effect
+    - speed ```<Number 1-7>```: Effect speed
+  - Example Response:
+  ```
+  {
+    "mutationId": 67,
+    "name": "Prysma-84F3EBB45500",
+    "state": "ON",
+    "color": {
+      "r": 255,
+      "g": 255,
+      "b": 255
+    },
+    "brightness": 50,
+    "effect": "Flash",
+    "speed": 4
+  }
+  ```
+## Command Topic: ```prysma/<id>/command```
+  - Fields:
+    - mutationId ```<Number> (optional)```: Unique id of command
+    - name ```<String>```: id of the light
+    - state ```<["ON", "OFF"]>```: light is on or off
+    - color ```<Object {r, g, b}>```: RGB color of light from 0-255
+    - brightness ```<Number 0-100>```: Brightness of light
+    - effect ```<String>```: Name of the current effect or "None" for no effect
+    - speed ```<Number 1-7>```: Effect speed
+  - Example Command:
+  ```
+  {
+    "mutationId": 67,
+    "name": "Prysma-84F3EBB45500",
+    "state": "ON",
+    "brightness": 50,
+    "color": {
+      "r": 127,
+      "g": 255,
+      "b": 0
+    },
+    "effect": "Flash",
+    "speed": 4
+  }
+  ```
+## Configuration Topic: ```prysma/<id>/config```
+  - Fields:
+    - id ```<String>```: id of the light
+    - name ```<String>```: id of the light
+    - version ```<String>```: Semantic Versioning version of light firmware
+    - hardware ```<String>```: Type of hardware running the light strip
+    - colorOrder ```<String>```: order of RGB colors in the light strip
+    - stripType ```<String>```: Type of LED strip being used
+    - ipAddress ```<String>```: IP address of the light strip
+    - macAddress ```<String>```: Mac address of the light strip
+    - numLeds ```<String>```: number of addressable leds the light strip has
+    - udpPort ```<String>```: udp port the strip is listening on for visualization packets
+  - Example Response:
+  ```
+  {
+    "id": "Prysma-84F3EBB45500",
+    "name": "Prysma-84F3EBB45500",
+    "version": "1.0.0",
+    "hardware": "8266",
+    "colorOrder": "GRB",
+    "stripType": "WS2812B",
+    "ipAddress": "10.0.0.114",
+    "macAddress": "84:F3:EB:B4:55:00",
+    "numLeds": 60,
+    "udpPort": 7778
+  }
+  ```
+## Discovery Topic: ```prysma/<id>/discovery```
+  - Fields:
+    - *: This can be anything
+  - Example Command:
+  ```
+  Discover
+  ```
+## Discovery Response Topic: ```prysma/<id>/hello```
+  - Fields:
+    - id ```<String>```: id of the light
+    - name ```<String>```: id of the light
+    - version ```<String>```: Semantic Versioning version of light firmware
+    - hardware ```<String>```: Type of hardware running the light strip
+    - colorOrder ```<String>```: order of RGB colors in the light strip
+    - stripType ```<String>```: Type of LED strip being used
+    - ipAddress ```<String>```: IP address of the light strip
+    - macAddress ```<String>```: Mac address of the light strip
+    - numLeds ```<String>```: number of addressable leds the light strip has
+    - udpPort ```<String>```: udp port the strip is listening on for visualization packets
+  - Example Response:
+  ```
+  {
+    "id": "Prysma-84F3EBB45500",
+    "name": "Prysma-84F3EBB45500",
+    "version": "1.0.0",
+    "hardware": "8266",
+    "colorOrder": "GRB",
+    "stripType": "WS2812B",
+    "ipAddress": "10.0.0.114",
+    "macAddress": "84:F3:EB:B4:55:00",
+    "numLeds": 60,
+    "udpPort": 7778
+  }
+  ```
+
 
 # Changing the light settings
 ## Inside config.h
